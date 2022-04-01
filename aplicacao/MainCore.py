@@ -19,7 +19,7 @@ class MainCore:
         self.widgets = Widgets(self)
         self.graphs = Graphs(self.WIDTH, self)
         scene.width = self.WIDTH
-        # self.run()
+        self.run()
 
     def createObjects(self):
         self.wall = box(pos = vector(-20, 0, 0), size = vector(1, 10, 10), color = color.yellow)
@@ -44,10 +44,14 @@ class MainCore:
             self.spring.length = float(self.widgets.spring_length_input.text)
 
     # equações
+    # k = intensidade de força necessária para deformação em 1 metro
+    # x = deformação ou variação do corpo (mola). Em tamanho original, x=0 (não apresenta energia potencial elástica)
+    #nergia potencial elástica - EPel = (k * x²)/2 onde x  =deformação da mola
+    #energia cinética - Ec = mv² /2
     def run(self):
         while True:
             rate(500)
-            self.f = vector(-self.block.pos.x * self.k, 0, 0) # Lei de Hookie; Força da mola
+            self.f = vector(-self.k * self.block.pos.x , 0, 0) # Lei de Hooke; Força da mola
             self.ace = self.f / self.m # força / massa
             self.block.pos = self.block.pos + (self.block.vel * self.dt) # incremento para movimentação do bloco
             self.block.vel = self.block.vel + (self.ace * self.dt)
