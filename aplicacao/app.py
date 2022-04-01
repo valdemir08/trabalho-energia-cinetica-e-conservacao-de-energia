@@ -1,3 +1,0 @@
-from TrabalhoEnergiaCineticaEConservacaoDeEnergia import *
-
-aplicacao = TrabalhoEnergiaCineticaEConservacaoDeEnergia()
