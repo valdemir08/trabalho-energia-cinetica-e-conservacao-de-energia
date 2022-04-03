@@ -58,7 +58,7 @@ class Widgets:
         Util.hSpace(3)
 
         # botão para reiniciar todos os valores
-        self.reset_button = button(bind = Util.nothing, text = "Resetar")
+        self.reset_button = button(bind = self.mainCore.pause, text = "Resetar")
         Util.vSpace(2)
         
         # slider do tamanho da area de atrito
@@ -76,6 +76,40 @@ class Widgets:
         self.friction_ground_position_slider.value = self.mainCore.friction_ground.pos.x * 1.25
         self.friction_ground_position_info = wtext(text = self.friction_ground_position_slider.value)
         Util.vSpace(2)
+        
+        self.epe_label = wtext(text = "Epe ")
+        Util.hSpace(2)
+        self.epe_info = wtext(text = f"{self.mainCore.epe:.2f}")
+        Util.hSpace(4)
+        
+        self.ce_label = wtext(text = "Ce ")
+        Util.hSpace(2)
+        self.ce_info = wtext(text = f"{self.mainCore.ce:.2f}")
+        Util.hSpace(4)
+        
+        self.me_label = wtext(text = "Me ")
+        Util.hSpace(2)
+        self.me_info = wtext(text = f"{self.mainCore.me:.2f}")
+        Util.hSpace(4)
+        
+        self.block_vel_label = wtext(text = "Vel(block) ")
+        Util.hSpace(2)
+        self.block_vel_info = wtext(text = f"{self.mainCore.block_vel.x:.2f}")
+        
+        self.block_pos_x_label = wtext(text = "X(block) ")
+        Util.hSpace(2)
+        self.block_pos_x_info = wtext(text = f"{self.mainCore.block.pos.x}")
+        Util.hSpace(2)
+        
+        self.block_head_pos_x_label = wtext(text = "X(block head) ")
+        Util.hSpace(2)
+        self.block_head_pos_x_info = wtext(text = f"{self.mainCore.block.pos.x}")
+        Util.vSpace(3)
+        
+        self.block_aceleration_label = wtext(text = " Ace(block) ")
+        Util.hSpace(2)
+        self.block_aceleration_info = wtext(text = f"{self.mainCore.aceleration}")
+        Util.vSpace(3)
         
         self.updateFrictionGroundSize()
                 
