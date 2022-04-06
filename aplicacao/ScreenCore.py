@@ -5,7 +5,7 @@
   \___ \ / __| '__/ _ \/ _ \ '_ \  | |    / _ \| '__/ _ \
   ____) | (__| | |  __/  __/ | | | | |___| (_) | | |  __/
  |_____/ \___|_|  \___|\___|_| |_|  \_____\___/|_|  \___|
-                                                          v0.2
+                                                          v0.4
 """
 
 from turtle import update
@@ -50,7 +50,7 @@ class Widgets:
         Util.hSpace(3)
 
         # botão de atualizar a animação de acordo com os dados informados pelo usuario
-        self.update_button = button(bind = self.mainCore.getAllInfo, text = "Atualizar")
+        self.update_button = button(bind = self.mainCore.setAllInfo, text = "Atualizar")
         Util.hSpace(3)
 
         # botão de iniciar a animação junto com os graficos
@@ -104,11 +104,14 @@ class Widgets:
         self.block_head_pos_x_label = wtext(text = "X(block head) ")
         Util.hSpace(2)
         self.block_head_pos_x_info = wtext(text = f"{self.mainCore.block.pos.x}")
-        Util.vSpace(3)
-        
-        self.block_aceleration_label = wtext(text = " Ace(block) ")
+
+        self.block_aceleration_label = wtext(text = "Ace(block) ")
         Util.hSpace(2)
         self.block_aceleration_info = wtext(text = f"{self.mainCore.aceleration}")
+        
+        self.is_friction_label = wtext(text = "Atrito? ")
+        Util.hSpace(2)
+        self.is_friction_info = wtext(text = f"{self.mainCore.is_friction}")
         Util.vSpace(3)
         
         self.updateFrictionGroundSize()
@@ -116,6 +119,7 @@ class Widgets:
     def updateFrictionGroundSize(self):
         self.friction_ground_size_info.text = self.friction_ground_size_slider.value
         self.mainCore.friction_ground.size.x = float(self.friction_ground_size_info.text)
+        
         if self.friction_ground_size_slider.value <= 0:
             self.mainCore.friction_ground.visible = False
         else:
@@ -139,30 +143,28 @@ class Widgets:
         self.friction_ground_position_info.text = self.friction_ground_position_slider.value
         
 class Graphs:
-    def __init__(self, WIDTH, mainCore):
+    def __init__(self, WIDTH, MainCore):
+        self.mainCore = MainCore
         # grafico 1 | Energia mecânica
-        self.graph1_config = graph(width = WIDTH, _height = 400, title = 'Energia mecânica / Tempo', xtitle = 'Tempo', ytitle = 'Energia mecânica', foreground = color.black, background = vector(0, 0.090196, 0.121569), fast = False)
-        self.graph1 = gcurve(graph = self.graph1_config, color = color.white, width = 5)
+        self.graph1_config = graph(width = WIDTH, _height = 400, title = 'Energia mecânica / Tempo', xtitle = 'Tempo', ytitle = 'Energia mecânica', foreground = color.black, background = color.white, fast = False)
+        self.graph1 = gcurve(graph = self.graph1_config, color = color.red, width = 5)
 
-        # grafico 2 | Energia cinética
-        self.graph2_config = graph(width = WIDTH, _height = 400, title = 'Energia cinética / Tempo', xtitle = 'Tempo', ytitle = 'Energia cinética', foreground = color.black, background = vector(0.030392, 0.447059, 0.301961), fast = False)
-        self.graph2 = gcurve(graph = self.graph2_config, color = color.white, width = 5)
+        # grafico 2 | Energia
+        self.graph2_config = graph(width = WIDTH, _height = 400, title = 'Energia / Tempo', xtitle = 'Tempo', ytitle = 'Energia', foreground = color.black, background = color.white, fast = False)
+        self.graph2_ce = gcurve(graph = self.graph2_config, color = color.red, width = 5, label = "Energia Cinética")
+        self.graph2_epe = gcurve(graph = self.graph2_config, color = color.black, width = 5, label = "Energia Potencial Elástica")
 
-        # grafico 3 | Energia potencial elástica
-        self.graph3_config = graph(width = WIDTH, _height = 400, title = 'Energia elástica / Tempo', xtitle = 'Tempo', ytitle = 'Energia elástica', foreground = color.black, background = vector(0.784314, 0.188235, 0.329412), fast = False)
-        self.graph3 = gcurve(graph = self.graph3_config, color = color.white, width = 5)
-
-        # grafico 4 | velocidade
-        self.graph4_config = graph(width = WIDTH, _height = 400, title = 'Velocidade / Tempo', xtitle = 'Tempo', ytitle = 'Velocidade', foreground = color.black, background = vector(0, 0.090196, 0.121569), fast = False)
-        self.graph4 = gcurve(graph = self.graph4_config, color = color.white, width = 5)
+        # grafico 3 | velocidade
+        self.graph3_config = graph(width = WIDTH, _height = 400, title = 'Velocidade / Tempo', xtitle = 'Tempo', ytitle = 'Velocidade', foreground = color.black, background = color.white, fast = False)
+        self.graph3 = gcurve(graph = self.graph3_config, color = color.red, width = 5)
 
         self.updateGraphs()
 
     def updateGraphs(self):
-        self.graph1.plot(0, 0)
-        self.graph2.plot(0, 0)
-        self.graph3.plot(0, 0)
-        self.graph4.plot(0, 0)
+        self.graph1.plot(self.mainCore.t, self.mainCore.me)
+        self.graph2_ce.plot(self.mainCore.t, self.mainCore.ce)
+        self.graph2_epe.plot(self.mainCore.t, self.mainCore.epe)
+        self.graph3.plot(self.mainCore.t, self.mainCore.block_vel.x)
 
 class Util:
     def vSpace(times):
