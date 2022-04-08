@@ -21,5 +21,5 @@
                                             |___/         
 """
 
-from MainCore import MainCore
+import MainCore
 MainCore()

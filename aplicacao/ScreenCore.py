@@ -5,17 +5,20 @@
   \___ \ / __| '__/ _ \/ _ \ '_ \  | |    / _ \| '__/ _ \
   ____) | (__| | |  __/  __/ | | | | |___| (_) | | |  __/
  |_____/ \___|_|  \___|\___|_| |_|  \_____\___/|_|  \___|
-                                                          v0.4.1
+                                                          v0.4.2
 """
 
 from vpython import *
+import math
 
 class Widgets:
+    #? metodo construtor
     def __init__(self, MainCore):
         self.mainCore = MainCore
        
         #? vSpace() -> espaço na vertical
         #? hSpace() -> espaço na horizontal
+        
         Util.vSpace(1)
 
         #? caixa de texto para a inserção da velocidade inicial do bloco
@@ -25,7 +28,7 @@ class Widgets:
         Util.hSpace(3)
 
         #? caixa de texto para a inserção da massa do bloco
-        self.block_mass_label = wtext(text = "Massa do bloco (g):")
+        self.block_mass_label = wtext(text = "Massa do bloco (Kg):")
         Util.hSpace(2)
         self.block_mass_input = winput(bind = Util.nothing, type = "numeric", width = 100, _height = 20)
         Util.hSpace(3)
@@ -49,7 +52,7 @@ class Widgets:
         Util.vSpace(2)
 
         #? botão de atualizar a animação de acordo com os dados informados pelo usuario
-        self.update_button = button(bind = self.mainCore.setAllInfo, text = "Atualizar")
+        self.update_button = button(bind = self.mainCore.setAllInfo, text = "Capturar dados")
         Util.hSpace(3)
 
         #? botão de iniciar a animação junto com os graficos
@@ -68,7 +71,7 @@ class Widgets:
         self.friction_ground_size_label = wtext(text = "Tamanho da area de atrito (cm)")
         Util.vSpace(2)
         self.friction_ground_size_slider = slider(bind = self.updateFrictionGroundSize, step = 1, min = 0, max = self.mainCore.friction_ground.size.x, length = self.mainCore.WIDTH)
-        self.friction_ground_size_slider.value = self.mainCore.friction_ground.size.x * .25
+        self.friction_ground_size_slider.value = self.mainCore.friction_ground.size.x * .05
         self.friction_ground_size_info = wtext(text = self.friction_ground_size_slider.value)
         Util.vSpace(2)
         
@@ -80,23 +83,29 @@ class Widgets:
         self.friction_ground_position_info = wtext(text = self.friction_ground_position_slider.value)
         Util.vSpace(2)   
     
+        #? atualiza o tamanho do chão de atrito de acordo com o valor inicial
         self.updateFrictionGroundSize()
-                
+
+    #? atualiza o tamanho do chão de atrito de acordo com o slider            
     def updateFrictionGroundSize(self):
         self.friction_ground_size_info.text = self.friction_ground_size_slider.value
         self.mainCore.friction_ground.size.x = float(self.friction_ground_size_info.text)
         
+        #? caso o tamanho seja 0, desliga a visibilidade (necessário por causa de problemas da biblioteca)
         if self.friction_ground_size_slider.value <= 0:
             self.mainCore.friction_ground.visible = False
         else:
             self.mainCore.friction_ground.visible = True
             
+        #? atualização a posição do chão de atrito para não ultrapassar o chão normal    
         self.updateFrictionGroundPosition()
-            
+    
+    #? atualiza a posição do chão de atrito        
     def updateFrictionGroundPosition(self): 
         self.mainCore.friction_ground.pos.x = float(self.friction_ground_position_info.text)
         self.updateFrictionGroundPositionSliderInfo()
         
+        #? regra para o chão de atrito não ultrapassar o chão normal
         if self.mainCore.friction_ground.pos.x < (self.mainCore.friction_ground.size.x * .5) + (self.mainCore.wall.size.x * .5):
             self.mainCore.friction_ground.pos.x = (self.mainCore.friction_ground.size.x * .5) + (self.mainCore.wall.size.x * .5)
             self.updateFrictionGroundPositionSliderInfo()
@@ -105,33 +114,37 @@ class Widgets:
             self.mainCore.friction_ground.pos.x = self.mainCore.ground.size.x - (self.mainCore.friction_ground.size.x * .5) + (self.mainCore.wall.size.x * .5)
             self.updateFrictionGroundPositionSliderInfo()
             
+    #? atualiza a numeração ao lado do slider que atualiza a posição do chão de atrito        
     def updateFrictionGroundPositionSliderInfo(self):
         self.friction_ground_position_info.text = self.friction_ground_position_slider.value
         
 class Graphs:
+    #? metodo construtor
     def __init__(self, WIDTH, MainCore):
         self.mainCore = MainCore
         #? grafico 1 | Energia mecânica
-        self.graph1_config = graph(width = WIDTH, _height = 400, title = 'Energia Mecânica(J) X Tempo(s)', xtitle = 'Tempo(s)', ytitle = 'Energia(J)', foreground = color.black, background = color.white, fast = False)
-        self.graph1 = gcurve(graph = self.graph1_config, color = color.red, width = 5)
+        self.graph1_config = graph(width = WIDTH, _height = 400, title = 'Energia Mecânica(J) X Tempo(s)', xtitle = 'Tempo(s)', ytitle = 'Energia Mecânica(J)', foreground = color.black, background = color.white, fast = False)
+        self.graph1 = gcurve(graph = self.graph1_config, color = color.blue, width = 5)
 
-        #? grafico 2 | Energia
-        self.graph2_config = graph(width = WIDTH, _height = 400, title = 'Energia Cinética e Potencial Elástica(J) / Tempo(s)', xtitle = 'Tempo(s)', ytitle = 'Energia Cinética e Potencial Elástica(J)', foreground = color.black, background = color.white, fast = False)
+        #? grafico 2 | Energia Cinética e Potencial Elástica(J)
+        self.graph2_config = graph(width = WIDTH, _height = 400, title = 'Energia Cinética(J) e Potencial Elástica(J) X Tempo(s)', xtitle = 'Tempo(s)', ytitle = 'Energia Cinética(J) e Potencial Elástica(J)', foreground = color.black, background = color.white, fast = False)
         self.graph2_ce = gcurve(graph = self.graph2_config, color = color.red, width = 5, label = "Energia Cinética(J)")
         self.graph2_epe = gcurve(graph = self.graph2_config, color = color.black, width = 5, label = "Energia Potencial Elástica(J)")
 
         #? grafico 3 | velocidade
-        self.graph3_config = graph(width = WIDTH, _height = 400, title = 'Velocidade(m/s) / Tempo(s)', xtitle = 'Tempo(s)', ytitle = 'Velocidade(m/s)', foreground = color.black, background = color.white, fast = False)
-        self.graph3 = gcurve(graph = self.graph3_config, color = color.red, width = 5)
+        self.graph3_config = graph(width = WIDTH, _height = 400, title = 'Velocidade(m/s) X Tempo(s)', xtitle = 'Tempo(s)', ytitle = 'Velocidade(m/s)', foreground = color.black, background = color.white, fast = False)
+        self.graph3 = gcurve(graph = self.graph3_config, color = color.green, width = 5)
 
-        self.updateGraphs()
+        self.update()
 
-    def updateGraphs(self):
+    #? função para atualizar os gráficos
+    def update(self):
         self.graph1.plot(self.mainCore.t, self.mainCore.me)
         self.graph2_ce.plot(self.mainCore.t, self.mainCore.ce)
         self.graph2_epe.plot(self.mainCore.t, self.mainCore.epe)
         self.graph3.plot(self.mainCore.t, self.mainCore.block_vel.x)
-        
+    
+    #? função para resetar os gráficos    
     def reset(self):
         self.graph1.delete()
         self.graph2_ce.delete()
@@ -139,17 +152,18 @@ class Graphs:
         self.graph3.delete()
 
 class Util:
+    #? espaço na vertical
     def vSpace(times):
-        #? espaço na vertical
         scene.append_to_caption(f'\n' * times)
 
+    #? espaço na horizontal
     def hSpace(times):
-        #? espaço na horizontal
         scene.append_to_caption(f' ' * times)
 
+    #? reseta todos os valores
     def reset(self):
-        #? reseta todos os valores
         pass
 
+    #? literalmente nada
     def nothing(self):
         pass

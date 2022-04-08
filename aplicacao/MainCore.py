@@ -4,16 +4,16 @@
  | \  / | __ _ _ _ __   | |     ___  _ __ ___ 
  | |\/| |/ _` | | '_ \  | |    / _ \| '__/ _ \
  | |  | | (_| | | | | | | |___| (_) | | |  __/
- |_|  |_|\__,_|_|_| |_|  \_____\___/|_|  \___| v 0.4.1
+ |_|  |_|\__,_|_|_| |_|  \_____\___/|_|  \___| v 0.4.2
                           
 """
-from turtle import pos
-from numpy import block
+
 from vpython import *
 from ScreenCore import Widgets, Graphs
 import math
 
 class MainCore:
+    #? metodo construtor
     def __init__(self) -> None:
         self.initialConditions()
         self.createObjects()
@@ -22,7 +22,8 @@ class MainCore:
         self.widgets = Widgets(self)
         self.graphs = Graphs(self.WIDTH, self)
         self.linkAxis()
-        
+    
+    #? funcção de criação dos objetos    
     def createObjects(self):
         #? chão (branco)
         self.ground = box(pos = vector((self.ground_size.x * .5) + (self.wall_size.x * .5), -5, 0), size = self.ground_size, color = vector(1, 1, 1))
@@ -39,7 +40,8 @@ class MainCore:
         self.block = box(pos = vector(self.ground_size.x * .90, -3, 0), size = vector(6, 4, 4), color = vector(1, 1, 0))        
         #? posição minima do block (evita o bloco de atravessar a parede)
         self.block_min_pos = self.wall_size.x + self.spring.length + self.spring_head.size.x + (self.block.size.x * .5)     
-        
+    
+    #? função de criação dos textos dentro da simulação    
     def createScreenText(self):
         #? texto da velocidade
         self.block_vel_text = label(text = f"V: {str(self.block_vel.x)} m/s", height = 15, box = False, line = False, opacity = 0, aling = 'right', pos = vector(self.block.pos.x, self.block.pos.y + 5, self.block.pos.z))
@@ -51,7 +53,7 @@ class MainCore:
         self.block_epe_text = label(text = f"EPE: {self.epe:.0f} J", height = 20, box = False, line = False, opacity = 0, aling = 'right', pos = vector(self.ground.pos.x * .15, self.ground.pos.y - 7, self.ground.pos.z))
         
         #? texto da energia potencial elástica
-        self.block_me_text = label(text = f"ME: {self.me:.0f} J", height = 20, box = False, line = False, opacity = 0, aling = 'right', pos = vector(self.ground.pos.x, self.ground.pos.y - 7, self.ground.pos.z))  
+        self.block_me_text = label(text = f"EM: {self.me:.0f} J", height = 20, box = False, line = False, opacity = 0, aling = 'right', pos = vector(self.ground.pos.x, self.ground.pos.y - 7, self.ground.pos.z))  
         
     #? configura a camera da simulação    
     def configCamera(self):
@@ -76,22 +78,22 @@ class MainCore:
         self.is_limit = False
         
         #? valores iniciais dos calculos
-        self.t = 0 # tempo
-        self.dt = 0.001 # acréscimo de tempo
-        self.k = 0 # constante elástica da mola
-        self.block_mass = 0 # massa
-        self.block_weight = 0
-        self.epe = 0
-        self.ce = 0
-        self.me = 0
-        self.force = 0
-        self.aceleration = 0
-        self.dynamic_friction_coefficient = 0
-        self.is_friction = False
-        self.friction_force = 0
-        self.work = 0
-        self.friction_d = 0
-        self.gravity = 9.8
+        self.t = 0              # tempo
+        self.dt = 0.001         # acréscimo de tempo
+        self.k = 0              # constante elástica da mola
+        self.block_mass = 0     # massa do bloco
+        self.block_weight = 0   # peso do bloco
+        self.epe = 0            # energia potencial elastica
+        self.ce = 0             # energia cinética
+        self.me = 0             # energia mecânica
+        self.force = 0          # força
+        self.aceleration = 0    # aceleração
+        self.dynamic_friction_coefficient = 0 # coeficiente dinamico de atrito
+        self.is_friction = False # está no atrito (verdadeiro / falso)
+        self.friction_force = 0  # força de atrito
+        self.work = 0            # trabalho
+        self.friction_d = 0      # distancia percorrida no chão com atrito
+        self.gravity = 9.81      # gravidade
     
     #? captura toda informação cedida pelo usuário    
     def setAllInfo(self):
@@ -183,8 +185,8 @@ class MainCore:
     #? calcula a velocidade do bloco em contato com a mola    
     def calcBlockVelOnSpring(self):
         if not self.is_limit:
-            self.force = -self.k * (self.initial_spring_lenght - self.spring.length) # Lei de Hooke; Força da mola
-            self.aceleration = math.floor((self.force / self.block_mass)) * -1 # força / massa  # incremento para movimentação do bloco
+            self.force = -self.k * (self.initial_spring_lenght - self.spring.length) #* Lei de Hooke; Força da mola
+            self.aceleration = math.floor((self.force / self.block_mass)) * -1 #* força / massa  # incremento para movimentação do bloco
     
     #? verifica se o bloco está em um ponto de atrito        
     def checkFrictionArea(self):
@@ -196,14 +198,6 @@ class MainCore:
         
         return True
 
-    #? calcula os 3 tipos de energia
-    def calcEnergy(self):
-        # Elatic Potential Energy        
-        self.epe = (self.k * ((self.initial_spring_lenght - self.spring.length)**2))/2 
-        # Cinectic Energy
-        self.ce = (self.block_mass * (self.block_vel.x**2))/2
-        # Mechanical Energy
-        self.me = self.epe + self.ce
    
    #? aplica o atrito no bloco
     def applyFriction(self, current_ce, current_block_vel):
@@ -211,15 +205,24 @@ class MainCore:
         self.friction_d = self.friction_d + (abs(self.block_vel.x) * self.dt)
         self.work = -self.friction_force * self.friction_d
         ce = self.ce + (self.work * self.dt)
-        # self.block_vel.x = self.block_vel.x + sqrt((2 * ce)/ self.block_mass) * self.dt
+        #! self.block_vel.x = self.block_vel.x + sqrt((2 * ce)/ self.block_mass) * self.dt
         if not ce <= 0: self.block_vel.x = (ce * current_block_vel) / current_ce
         else:
             self.block_vel.x = 0
+    
+    #? calcula os 3 tipos de energia
+    def calcEnergy(self):
+        #* Energia Potencial Elastica        
+        self.epe = (self.k * ((self.initial_spring_lenght - self.spring.length)**2))/2
+        #* Energia Cinetica
+        self.ce = (self.block_mass * (self.block_vel.x**2))/2
+        #* Energia Mecanica
+        self.me = self.epe + self.ce
             
     #? atualiza as informações do bloco na tela
     def updateCalcInfo(self):        
         #? atualiza o a posição e o texto da aceleração
-        self.block_vel_text.text = f"V: {self.block_vel.x:.0f} m/s"
+        self.block_vel_text.text = f"V: {self.block_vel.x:.2f} m/s"
         self.block_vel_text.pos.x = self.block.pos.x       
         #? atualiza o a posição e o texto da energia cinetica
         self.block_ce_text.text = f"EC: {self.ce:.0f} J"
@@ -227,7 +230,7 @@ class MainCore:
         #? atualiza o texto da energia potencial elástica
         self.block_epe_text.text = f"EPE: {self.epe:.0f} J"
         #? atualiza o texto da energia mecanica
-        self.block_me_text.text = f"ME: {self.me:.0f} J"
+        self.block_me_text.text = f"EM: {self.me:.0f} J"
         
     #? loop central onde o código funciona se ultizando de quase todas as funções anteriores  
     def run(self):
@@ -252,7 +255,7 @@ class MainCore:
                     self.friction_d = 0
                 
                 self.updateCalcInfo()
-                self.graphs.updateGraphs()
+                self.graphs.update()
                 self.moveBlock()
                 self.t = self.t + self.dt
                 
