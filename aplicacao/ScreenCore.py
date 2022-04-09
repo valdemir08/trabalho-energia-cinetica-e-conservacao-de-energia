@@ -5,7 +5,7 @@
   \___ \ / __| '__/ _ \/ _ \ '_ \  | |    / _ \| '__/ _ \
   ____) | (__| | |  __/  __/ | | | | |___| (_) | | |  __/
  |_____/ \___|_|  \___|\___|_| |_|  \_____\___/|_|  \___|
-                                                          v0.4.2
+                                                          v0.5
 """
 
 from vpython import *
@@ -117,7 +117,6 @@ class Widgets:
     #? atualiza a numeração ao lado do slider que atualiza a posição do chão de atrito        
     def updateFrictionGroundPositionSliderInfo(self):
         self.friction_ground_position_info.text = self.friction_ground_position_slider.value
-        
 class Graphs:
     #? metodo construtor
     def __init__(self, WIDTH, MainCore):
