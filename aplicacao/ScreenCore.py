@@ -5,7 +5,7 @@
   \___ \ / __| '__/ _ \/ _ \ '_ \  | |    / _ \| '__/ _ \
   ____) | (__| | |  __/  __/ | | | | |___| (_) | | |  __/
  |_____/ \___|_|  \___|\___|_| |_|  \_____\___/|_|  \___|
-                                                          v0.5
+                                                          v0.5.1
 """
 
 from vpython import *
@@ -76,7 +76,7 @@ class Widgets:
         Util.vSpace(2)
         
         #? slider da posicao da area de atrito
-        self.friction_ground_position_label = wtext(text = "Posição da area de atrito (m)")
+        self.friction_ground_position_label = wtext(text = "Posição da area de atrito (cm)")
         Util.vSpace(2)
         self.friction_ground_position_slider = slider(bind = self.updateFrictionGroundPosition, step = .5, min = 0, max = self.mainCore.friction_ground.size.x, length = self.mainCore.WIDTH)
         self.friction_ground_position_slider.value = self.mainCore.friction_ground.pos.x * 1.25

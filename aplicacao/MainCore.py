@@ -1,10 +1,11 @@
+ 
 """
   __  __       _          _____               
  |  \/  |     (_)        / ____|              
  | \  / | __ _ _ _ __   | |     ___  _ __ ___ 
  | |\/| |/ _` | | '_ \  | |    / _ \| '__/ _ \
  | |  | | (_| | | | | | | |___| (_) | | |  __/
- |_|  |_|\__,_|_|_| |_|  \_____\___/|_|  \___| v 0.5
+ |_|  |_|\__,_|_|_| |_|  \_____\___/|_|  \___| v 0.5.1
                           
 """
 
@@ -203,7 +204,10 @@ class MainCore:
         self.friction_force = self.dynamic_friction_coefficient * self.block_weight
         self.friction_d = self.friction_d + (abs(self.block_vel.x) * self.dt)
         self.work = math.ceil(-self.friction_force * self.friction_d)
+        
         ce = self.ce + (self.work * self.dt)
+        print("==>> self.work: ", self.work)
+    
         #! self.block_vel.x = self.block_vel.x + sqrt((2 * ce)/ self.block_mass) * self.dt
         if not ce <= 0: self.block_vel.x = math.ceil((ce * current_block_vel)) /  current_ce
         else:
@@ -213,7 +217,6 @@ class MainCore:
     def calcEnergy(self):
         #* Energia Potencial Elastica        
         self.epe = math.floor((self.k * ((self.initial_spring_lenght - self.spring.length)**2))/2)
-        #self.epe = (self.k * ((self.initial_spring_head_pos - self.spring_head.pos.x)**2))/2
         #* Energia Cinetica
         self.ce =  math.ceil((self.block_mass * (self.block_vel.x**2))/2)
         #* Energia Mecanica
@@ -237,7 +240,8 @@ class MainCore:
         self.calcEnergy()
         while True:
             while self.is_running:
-                rate(500)
+                rate(300)
+                self.moveBlock()
                 self.checkSpringLimit()
                 self.checkSpringComportament()
                 
@@ -256,7 +260,6 @@ class MainCore:
                 
                 self.updateCalcInfo()
                 self.graphs.update()
-                self.moveBlock()
                 self.t = self.t + self.dt
                 
     #? pausa e retoma o funcionamento do código        
