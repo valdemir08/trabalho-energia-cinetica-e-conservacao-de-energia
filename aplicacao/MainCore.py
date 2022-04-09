@@ -4,13 +4,13 @@
  | \  / | __ _ _ _ __   | |     ___  _ __ ___ 
  | |\/| |/ _` | | '_ \  | |    / _ \| '__/ _ \
  | |  | | (_| | | | | | | |___| (_) | | |  __/
- |_|  |_|\__,_|_|_| |_|  \_____\___/|_|  \___| v 0.4.2
+ |_|  |_|\__,_|_|_| |_|  \_____\___/|_|  \___| v 0.5
                           
 """
 
 from vpython import *
 from ScreenCore import Widgets, Graphs
-import math
+import math, time
 
 class MainCore:
     #? metodo construtor
@@ -63,19 +63,18 @@ class MainCore:
     #? configura os valores iniciais    
     def initialConditions(self):
         #? valores iniciais dos objetos
-        self.is_running = True
-        self.WIDTH = 1000
-        scene.width = self.WIDTH
-        self.wall_size = vector(1, 10, 10)
-        self.ground_size = vector(100, 0.5, 10)
-        self.friction_ground_size = vector(100, 0.6, 10.1)
-        self.initial_block_pos = vector(self.ground_size.x * .90, -3, 0)
-        self.initial_spring_lenght = 20
-        self.spring_head_vel = vector(0, 0, 0)
-        self.block_vel = vector(0,0,0)
-        self.is_coming = True
-        self.is_block_repelled = False
-        self.is_limit = False
+        self.is_running = True              # está rodando? (verdadeiro ou falso)
+        self.WIDTH = 1000                   # largura global
+        scene.width = self.WIDTH            # configura a largura da cena ultilizando a largura global
+        self.wall_size = vector(1, 10, 10)  # tamanho da parede
+        self.ground_size = vector(100, 0.5, 10)             # tamanho do chão
+        self.friction_ground_size = vector(100, 0.6, 10.1)  # tamanho do chão de atrito
+        self.initial_block_pos = vector(self.ground_size.x * .90, -3, 0) # posição inicial do bloco
+        self.initial_spring_lenght = 20     # tamanho inicial da mola
+        self.block_vel = vector(0,0,0)      # velocidade do bloco
+        self.is_coming = True               # o bloco está vindo (da direita para esquerda) (verdadeiro ou falso)
+        self.is_block_repelled = False      # o bloco foi repelido? (da esquerda para direita) (verdadeiro ou falso)
+        self.is_limit = False               # a mola atingiu o seu limite de compressão (verdadeiro ou falso)
         
         #? valores iniciais dos calculos
         self.t = 0              # tempo
@@ -89,7 +88,7 @@ class MainCore:
         self.force = 0          # força
         self.aceleration = 0    # aceleração
         self.dynamic_friction_coefficient = 0 # coeficiente dinamico de atrito
-        self.is_friction = False # está no atrito (verdadeiro / falso)
+        self.is_friction = False # está no atrito? (verdadeiro / falso)
         self.friction_force = 0  # força de atrito
         self.work = 0            # trabalho
         self.friction_d = 0      # distancia percorrida no chão com atrito
@@ -132,13 +131,14 @@ class MainCore:
             self.initial_spring_lenght = float(self.widgets.spring_length_input.text) 
             self.spring.length = self.initial_spring_lenght
         self.linkAxis()
-    
+        self.initial_spring_head_pos = self.spring_head.pos.x
+        
     #? determina a constante elática da mola de acordo com a informação do usuário    
     def setSpringElasticConstant(self):
         if  self.widgets.spring_elastic_constant_input.text == '':
             self.k = 0  
         else:
-            self.k = float(self.widgets.spring_length_input.text) 
+            self.k = float(self.widgets.spring_elastic_constant_input.text) 
                    
     #? determina o coeficiente de atrito dinamico de acordo com a informação do usuário
     def setDynamicFrictionCoefficient(self):
@@ -157,7 +157,7 @@ class MainCore:
     
     #? complemento da função anterior (updateSpring)
     def update(self):
-        self.spring.length = self.spring.length + (self.block_vel.x * self.dt)
+        self.spring.length = self.spring.length + (self.block_vel.x  * self.dt)
         self.linkAxis()
     
     #? move a cabeça da mola de acordo com o movimento da mesma    
@@ -166,6 +166,8 @@ class MainCore:
     
     #? checa se o bloco colidiu com a cabeça da mola
     def checkSpringColision(self):
+        if self.spring.length >= self.initial_spring_lenght and self.is_block_repelled: 
+            return False
         if self.block.pos.x <= self.spring_head.pos.x + (self.spring_head.size.x * .5) + (self.block.size.x * .5):
             return True
         return False
@@ -179,45 +181,43 @@ class MainCore:
     
     #? determina o ponto em que a mola irá empurrar o bloco        
     def checkSpringComportament(self):
-        if self.block_vel.x > 0:
+        if self.block_vel.x >= 0:    
             self.is_block_repelled = True
     
     #? calcula a velocidade do bloco em contato com a mola    
     def calcBlockVelOnSpring(self):
         if not self.is_limit:
-            self.force = -self.k * (self.initial_spring_lenght - self.spring.length) #* Lei de Hooke; Força da mola
+            self.force = math.ceil(-self.k * (self.initial_spring_lenght - self.spring.length)) #* Lei de Hooke Força da mola
             self.aceleration = math.floor((self.force / self.block_mass)) * -1 #* força / massa  # incremento para movimentação do bloco
     
     #? verifica se o bloco está em um ponto de atrito        
     def checkFrictionArea(self):
         if self.block.pos.x - (self.block.size.x * .5) > self.friction_ground.pos.x + (self.friction_ground.size.x * 0.5):
             return False
-        
         if self.block.pos.x + (self.block.size.x * .5) < self.friction_ground.pos.x - (self.friction_ground.size.x * 0.5):
             return False
-        
         return True
 
-   
    #? aplica o atrito no bloco
     def applyFriction(self, current_ce, current_block_vel):
         self.friction_force = self.dynamic_friction_coefficient * self.block_weight
         self.friction_d = self.friction_d + (abs(self.block_vel.x) * self.dt)
-        self.work = -self.friction_force * self.friction_d
+        self.work = math.ceil(-self.friction_force * self.friction_d)
         ce = self.ce + (self.work * self.dt)
         #! self.block_vel.x = self.block_vel.x + sqrt((2 * ce)/ self.block_mass) * self.dt
-        if not ce <= 0: self.block_vel.x = (ce * current_block_vel) / current_ce
+        if not ce <= 0: self.block_vel.x = math.ceil((ce * current_block_vel)) /  current_ce
         else:
             self.block_vel.x = 0
     
     #? calcula os 3 tipos de energia
     def calcEnergy(self):
         #* Energia Potencial Elastica        
-        self.epe = (self.k * ((self.initial_spring_lenght - self.spring.length)**2))/2
+        self.epe = math.floor((self.k * ((self.initial_spring_lenght - self.spring.length)**2))/2)
+        #self.epe = (self.k * ((self.initial_spring_head_pos - self.spring_head.pos.x)**2))/2
         #* Energia Cinetica
-        self.ce = (self.block_mass * (self.block_vel.x**2))/2
+        self.ce =  math.ceil((self.block_mass * (self.block_vel.x**2))/2)
         #* Energia Mecanica
-        self.me = self.epe + self.ce
+        self.me =  math.ceil(self.epe + self.ce)
             
     #? atualiza as informações do bloco na tela
     def updateCalcInfo(self):        
@@ -231,7 +231,7 @@ class MainCore:
         self.block_epe_text.text = f"EPE: {self.epe:.0f} J"
         #? atualiza o texto da energia mecanica
         self.block_me_text.text = f"EM: {self.me:.0f} J"
-        
+             
     #? loop central onde o código funciona se ultizando de quase todas as funções anteriores  
     def run(self):
         self.calcEnergy()
